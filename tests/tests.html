@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>QUnit Tests</title>
+    <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-2.1.1.css">
+    <script type="text/javascript" src="../scripts/cell.js"></script>
+</head>
+<body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <script src="https://code.jquery.com/qunit/qunit-2.1.1.js"></script>
+    <script>
+        QUnit.test("Cell - Left Edge Tests", function (assert) {             
+
+            assert.equal(new Cell(0, 0, 100, 100).getLeftEdge(), 0);
+            assert.equal(new Cell(1, 1, 100, 100).getLeftEdge(), 100);
+            assert.equal(new Cell(10, 10, 100, 100).getLeftEdge(), 1000);
+        });
+
+        QUnit.test("Cell - Right Edge Tests", function (assert) {             
+
+            assert.equal(new Cell(0, 0, 100, 100).getRightEdge(), 100);
+            assert.equal(new Cell(1, 1, 100, 100).getRightEdge(), 200);
+            assert.equal(new Cell(10, 10, 100, 100).getRightEdge(), 1100);
+        });
+
+        QUnit.test("Cell - Top Edge Tests", function (assert) {             
+
+            assert.equal(new Cell(0, 0, 100, 100).getTopEdge(), 0);
+            assert.equal(new Cell(1, 1, 100, 100).getTopEdge(), 100);
+            assert.equal(new Cell(10, 10, 100, 100).getTopEdge(), 1000);
+        });
+
+        QUnit.test("Cell - Bottom Edge Tests", function (assert) {             
+
+            assert.equal(new Cell(0, 0, 100, 100).getBottomEdge(), 100);
+            assert.equal(new Cell(1, 1, 100, 100).getBottomEdge(), 200);
+            assert.equal(new Cell(10, 10, 100, 100).getBottomEdge(), 1100);
+        });                
+
+
+    
+    </script>
+</body>
+</html>
