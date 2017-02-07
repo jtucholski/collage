@@ -5,41 +5,114 @@
     <title>QUnit Tests</title>
     <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-2.1.1.css">
     <script type="text/javascript" src="../scripts/cell.js"></script>
+    <script type="text/javascript" src="../scripts/collage.js"></script>
 </head>
 <body>
     <div id="qunit"></div>
     <div id="qunit-fixture"></div>
     <script src="https://code.jquery.com/qunit/qunit-2.1.1.js"></script>
     <script>
-        QUnit.test("Cell - Left Edge Tests", function (assert) {             
+        QUnit.module( "Cell Tests", function() {
+            QUnit.test("Cell - Left Edge Tests", function (assert) {             
 
-            assert.equal(new Cell(0, 0, 100, 100).getLeftEdge(), 0);
-            assert.equal(new Cell(1, 1, 100, 100).getLeftEdge(), 100);
-            assert.equal(new Cell(10, 10, 100, 100).getLeftEdge(), 1000);
+                assert.equal(new Cell(0, 0, 100, 100).getLeftEdge(), 0);
+                assert.equal(new Cell(1, 1, 100, 100).getLeftEdge(), 100);
+                assert.equal(new Cell(10, 10, 100, 100).getLeftEdge(), 1000);
+            });
+
+            QUnit.test("Cell - Right Edge Tests", function (assert) {             
+
+                assert.equal(new Cell(0, 0, 100, 100).getRightEdge(), 100);
+                assert.equal(new Cell(1, 1, 100, 100).getRightEdge(), 200);
+                assert.equal(new Cell(10, 10, 100, 100).getRightEdge(), 1100);
+            });
+
+            QUnit.test("Cell - Top Edge Tests", function (assert) {             
+
+                assert.equal(new Cell(0, 0, 100, 100).getTopEdge(), 0);
+                assert.equal(new Cell(1, 1, 100, 100).getTopEdge(), 100);
+                assert.equal(new Cell(10, 10, 100, 100).getTopEdge(), 1000);
+            });
+
+            QUnit.test("Cell - Bottom Edge Tests", function (assert) {             
+
+                assert.equal(new Cell(0, 0, 100, 100).getBottomEdge(), 100);
+                assert.equal(new Cell(1, 1, 100, 100).getBottomEdge(), 200);
+                assert.equal(new Cell(10, 10, 100, 100).getBottomEdge(), 1100);
+            });                
         });
 
-        QUnit.test("Cell - Right Edge Tests", function (assert) {             
+        QUnit.module("Collage Tests", function() {
+            QUnit.test("Empty Grid Tests", function (assert) { 
+                
+                var collage = new Collage(100, 200);
 
-            assert.equal(new Cell(0, 0, 100, 100).getRightEdge(), 100);
-            assert.equal(new Cell(1, 1, 100, 100).getRightEdge(), 200);
-            assert.equal(new Cell(10, 10, 100, 100).getRightEdge(), 1100);
+                assert.equal(collage.arr.length, 10);
+                assert.equal(collage.arr[0].length, 20);
+
+                var collage = new Collage(200, 100);
+
+                assert.equal(collage.arr.length, 20);
+                assert.equal(collage.arr[0].length, 10);                                                
+            });
+
+            /*QUnit.test("Empty Grid / Uneven Width Tests", function (assert) { 
+                //What happens if the width is 255 and we only expect column widths of 10px
+            });*/
+
+            QUnit.test("Fit Block Tests - 100x100 Block Four Corners", function(assert) { 
+                var collage = new Collage(800, 800);
+                var blocks = [
+                    {renderWidth: 100, renderHeight: 100},
+                    {renderWidth: 100, renderHeight: 100},
+                    {renderWidth: 100, renderHeight: 100},
+                    {renderWidth: 100, renderHeight: 100}
+                ];
+
+                collage.fit(blocks);
+
+                assert.equal(blocks[0].startX, 0);
+                assert.equal(blocks[0].startY, 0);
+                
+                assert.equal(blocks[1].startX, 700);
+                assert.equal(blocks[1].startY, 0);
+
+                assert.equal(blocks[2].startX, 0);
+                assert.equal(blocks[2].startY, 700);
+
+                assert.equal(blocks[3].startX, 700);
+                assert.equal(blocks[3].startY, 700);
+            });
+
+            QUnit.test("Fix Block Tests - Rectangle Blocks Four Corners", function(assert) { 
+
+                var collage = new Collage(800, 800);
+                var blocks = [
+                    {renderWidth: 100, renderHeight: 200},
+                    {renderWidth: 200, renderHeight: 200},
+                    {renderWidth: 200, renderHeight: 100},
+                    {renderWidth: 200, renderHeight: 200}
+                ];
+
+                collage.fit(blocks);
+
+                assert.equal(blocks[0].startX, 0);
+                assert.equal(blocks[0].startY, 0);
+
+                assert.equal(blocks[1].startX, 600);
+                assert.equal(blocks[1].startY, 0);
+
+                assert.equal(blocks[2].startX, 0);
+                assert.equal(blocks[2].startY, 700);
+
+                assert.equal(blocks[3].startX, 600);
+                assert.equal(blocks[3].startY, 600);
+            });
+
         });
 
-        QUnit.test("Cell - Top Edge Tests", function (assert) {             
 
-            assert.equal(new Cell(0, 0, 100, 100).getTopEdge(), 0);
-            assert.equal(new Cell(1, 1, 100, 100).getTopEdge(), 100);
-            assert.equal(new Cell(10, 10, 100, 100).getTopEdge(), 1000);
-        });
-
-        QUnit.test("Cell - Bottom Edge Tests", function (assert) {             
-
-            assert.equal(new Cell(0, 0, 100, 100).getBottomEdge(), 100);
-            assert.equal(new Cell(1, 1, 100, 100).getBottomEdge(), 200);
-            assert.equal(new Cell(10, 10, 100, 100).getBottomEdge(), 1100);
-        });                
-
-
+        
     
     </script>
 </body>
