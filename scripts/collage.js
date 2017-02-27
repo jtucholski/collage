@@ -10,12 +10,10 @@ Collage = function (height, width, rowHeight, columnWidth) {
     this.rowHeight = rowHeight;
     this.columnWidth = columnWidth;
 
-
     this.initializeGrid(height, width);
 }
 
 Collage.prototype = {
-
 
     fit: function (blocks) {
         this.fitCorners(blocks);
@@ -23,16 +21,25 @@ Collage.prototype = {
         var numRows = this.arr.length;
         var numColumns = this.arr[0].length;
 
+        var blockNumber = 4;
+
         for (var row = 0; row < numRows; row++) {
             for (var col = 0; col < numColumns; col++) {
 
-
-
+                if (!this.arr[row][col].isAvailable) {
+                    continue;
+                }
+                else {
+                    if (this.makeBlockFit(blocks[blockNumber], this.arr[row][col])) {
+                        blocks[blockNumber].startX = this.arr[row][col].getLeftEdge();
+                        blocks[blockNumber].startY = this.arr[row][col].getTopEdge();
+                        this.blockAdjacentCells(blocks[blockNumber], this.arr[row][col]);
+                        blockNumber++;
+                    }
+                }
             }
         }
-
     },
-
 
     initializeGrid: function (height, width) {
 
@@ -49,9 +56,6 @@ Collage.prototype = {
         }
 
     },
-
-
-
 
     // Private Methods
     fitCorners: function (blocks) {
@@ -98,6 +102,9 @@ Collage.prototype = {
         var maxRows = block.renderHeight / this.rowHeight;
         var maxCols = block.renderWidth / this.columnWidth;
 
+        if (maxRows < 1 || maxCols < 1) {
+            return false;
+        }
 
         // Get Smallest Block Ratio
         var scaleFactor = 1;
@@ -116,7 +123,7 @@ Collage.prototype = {
             // Don't go too big
             if (ratioRows > maxRows || ratioCols > maxCols) {
                 break;
-            }
+            }            
             
             // Check to see if it fits
             for (var row = startingCell.row; row < (startingCell.row + ratioRows) && canFit; row++) {
@@ -142,17 +149,13 @@ Collage.prototype = {
             else {
                 block.scaleToHeight(scaleRatio.height);
             }
-                        
+            block.fit = true;
             return true;
         }
         else {
             return false;
         }                
     },
-
-
-
-
 
     /* 
     * @block the block object being to be started in the top-left of adjacent cells
@@ -179,7 +182,4 @@ Collage.prototype = {
             row++;
         }
     },
-
-
-
 }

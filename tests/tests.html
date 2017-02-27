@@ -237,7 +237,7 @@
                 assert.equal(block.renderHeight, 20);
                 assert.equal(block.renderWidth, 20);
             });
-
+            
             QUnit.test("Too Wide (Square) - Should Resize", function (assert) {
 
                 var collage = new Collage(100, 100, 10, 10);
@@ -329,6 +329,48 @@
                 
                 assert.equal(collage.makeBlockFit(block, collage.arr[0][0]), false);
             })
+
+
+            QUnit.test("Too Big - Doesn't Fill Whole Cell - Scale Down", function (assert) {
+
+                var collage = new Collage(100, 100, 10, 10);
+                var block = new Block(25, 25);
+
+                collage.arr[0][2].isAvailable = false;
+                collage.arr[1][2].isAvailable = false;
+                collage.arr[2][0].isAvailable = false;
+                collage.arr[2][1].isAvailable = false;
+
+                assert.equal(collage.makeBlockFit(block, collage.arr[0][0]), true);
+                assert.equal(block.renderHeight, 20);
+                assert.equal(block.renderWidth, 20);
+            });
+
+            QUnit.test("No Conflicts - Doesn't Fill Whole Cell - Scale Down", function (assert) {
+
+                var collage = new Collage(100, 100, 10, 10);
+                var block = new Block(35, 35);                
+
+                assert.equal(collage.makeBlockFit(block, collage.arr[0][0]), true);
+                assert.equal(block.renderHeight, 30);
+                assert.equal(block.renderWidth, 30);
+            });
+
+            QUnit.test("No Conflicts - Doesn't Fill One Cell - Scale Down", function (assert) {
+
+                var collage = new Collage(100, 100, 10, 10);
+                var block = new Block(5, 5);
+
+                assert.equal(collage.makeBlockFit(block, collage.arr[0][0]), false);                
+            });
+
+            QUnit.test("No Conflicts - Doesn't Fill One Cell - Scale Down", function (assert) {
+
+                var collage = new Collage(100, 100, 10, 10);
+                var block = new Block(5, 10);
+
+                assert.equal(collage.makeBlockFit(block, collage.arr[0][0]), false);                
+            });
 
         });
 
