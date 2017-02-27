@@ -1,9 +1,9 @@
-Collage = function(height, width, rowHeight, columnWidth) {     
+Collage = function (height, width, rowHeight, columnWidth) {
 
-    if (rowHeight == undefined){
+    if (rowHeight == undefined) {
         rowHeight = 10;
     }
-    if (columnWidth == undefined){
+    if (columnWidth == undefined) {
         columnWidth = 10;
     }
 
@@ -11,13 +11,13 @@ Collage = function(height, width, rowHeight, columnWidth) {
     this.columnWidth = columnWidth;
 
 
-    this.initializeGrid(height, width);    
+    this.initializeGrid(height, width);
 }
 
 Collage.prototype = {
 
 
-    fit: function(blocks) {
+    fit: function (blocks) {
         this.fitCorners(blocks);
 
         var numRows = this.arr.length;
@@ -34,27 +34,27 @@ Collage.prototype = {
     },
 
 
-    initializeGrid: function(height, width) {
-                
+    initializeGrid: function (height, width) {
+
         var numRows = height / this.rowHeight;
         var numColumns = width / this.columnWidth;
-        
+
         this.arr = [];
 
-        for(var row = 0; row < numRows; row++){
+        for (var row = 0; row < numRows; row++) {
             this.arr[row] = [];
-            for(var col = 0; col < numColumns; col++){
+            for (var col = 0; col < numColumns; col++) {
                 this.arr[row][col] = new Cell(row, col, this.rowHeight, this.columnWidth);
             }
         }
 
     },
 
-    
+
 
 
     // Private Methods
-    fitCorners: function(blocks){
+    fitCorners: function (blocks) {
 
         var lastColumn = this.arr[0].length - 1;
         var lastRow = this.arr.length - 1;
@@ -62,11 +62,11 @@ Collage.prototype = {
         blocks[0].startX = this.arr[0][0].getLeftEdge();
         blocks[0].startY = this.arr[0][0].getTopEdge();
         this.blockAdjacentCells(blocks[0], this.arr[0][0]);
-        
+
         blocks[1].startX = this.arr[0][lastColumn].getRightEdge() - blocks[1].renderWidth;
         blocks[1].startY = this.arr[0][lastColumn].getTopEdge();
         this.blockAdjacentCells(blocks[1], this.arr[0][this.getColumnIndex(blocks[1].startX)]);
-        
+
         blocks[2].startX = this.arr[lastRow][0].getLeftEdge();
         blocks[2].startY = this.arr[lastRow][0].getBottomEdge() - blocks[2].renderHeight;
         this.blockAdjacentCells(blocks[2], this.arr[this.getRowIndex(blocks[2].startY)][0]);
@@ -79,45 +79,91 @@ Collage.prototype = {
     /*
     * Given an xCoordinate get the column that corresponds.    
     */
-    getColumnIndex: function(xPosition){
+    getColumnIndex: function (xPosition) {
         return xPosition / this.columnWidth;
     },
 
     /*
     * Given a yCoordinate gets the row that corresponds.
     */
-    getRowIndex: function(yPosition){
+    getRowIndex: function (yPosition) {
         return yPosition / this.rowHeight;
     },
 
     /*
     * Determines if a block will still fit within the available space.
     */
-    makeBlockFit: function(block, startingCell) {
-                
-        var rows = block.renderHeight / this.rowHeight;
-        var cols = block.renderWidth / this.columnWidth;
+    makeBlockFit: function (block, startingCell) {
 
-        for (var row = startingCell.row; row < rows; row++) {
-            for (var col = startingCell.column; col < cols; col++) {
+        var maxRows = block.renderHeight / this.rowHeight;
+        var maxCols = block.renderWidth / this.columnWidth;
 
+
+        // Get Smallest Block Ratio
+        var scaleFactor = 1;
+        var scaleRatio = null;        
+        var canFit = true;                
+
+        while (canFit) {
+            // Scale it by N            
+            var testRatio = {
+                height: block.calculateScaledHeight(this.columnWidth * scaleFactor),
+                width: this.columnWidth * scaleFactor
+            };
+            var ratioRows = testRatio.height / this.rowHeight;
+            var ratioCols = testRatio.width / this.columnWidth;
+
+            // Don't go too big
+            if (ratioRows > maxRows || ratioCols > maxCols) {
+                break;
             }
+            
+            // Check to see if it fits
+            for (var row = startingCell.row; row < (startingCell.row + ratioRows) && canFit; row++) {
+                for (var col = startingCell.column; col < (startingCell.column + ratioCols); col++) {
+                    if (!this.arr[row][col].isAvailable) {
+                        canFit = false;
+                        break;
+                    }
+                }
+            }
+
+            // If it can, try increasing by factor of n
+            if (canFit) { 
+                scaleFactor++;
+                scaleRatio = testRatio;                
+            }            
         }
 
+        if (scaleRatio != null) {
+            if (scaleRatio.width > scaleRatio.height) {
+                block.scaleToWidth(scaleRatio.width);
+            }
+            else {
+                block.scaleToHeight(scaleRatio.height);
+            }
+                        
+            return true;
+        }
+        else {
+            return false;
+        }                
     },
 
-    
+
+
+
 
     /* 
     * @block the block object being to be started in the top-left of adjacent cells
     * @cell the top-left corner of the block
     */
-    blockAdjacentCells: function(block, cell){
-        
+    blockAdjacentCells: function (block, cell) {
+
         var remainingHeight = block.renderHeight;
         var row = cell.row;
 
-        while(remainingHeight >= cell.height) {            
+        while (remainingHeight >= cell.height) {
             var remainingWidth = block.renderWidth;
             var col = cell.column;
 
