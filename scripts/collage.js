@@ -57,7 +57,11 @@ Collage.prototype = {
 
     },
 
-    // Private Methods
+    /*
+    * Runs through the "corners" OR 2-edge squares on grid and makes
+    * sure that an image is square with them.
+    * @returns number of blocks fitted
+    */
     fitCorners: function (blocks) {
 
         var lastColumn = this.arr[0].length - 1;
@@ -78,6 +82,91 @@ Collage.prototype = {
         blocks[3].startX = this.arr[lastRow][lastColumn].getRightEdge() - blocks[3].renderWidth;
         blocks[3].startY = this.arr[lastRow][lastColumn].getBottomEdge() - blocks[3].renderHeight;
         this.blockAdjacentCells(blocks[3], this.arr[this.getRowIndex(blocks[3].startY)][this.getColumnIndex(blocks[3].startX)]);
+
+        return 4;
+    },
+
+    /*
+    * Runs through each of the single edge squares available in the grid making
+    * sure that an image it square with the edge.
+    */
+    fitEdges: function(blocks, startAt){
+        var edgeCells = this.getEdgeCells();
+
+        for (var i = 0; i < edgeCells.length; i++) {
+            
+            var cell = edgeCells[i];
+            var edgeType = this.getEdgeType(cell)[0];
+
+            if (!cell.isAvailable) {
+                continue;
+            }
+
+            // Offset the Top-Left corner if on right side
+            if (edgeType == "right") {
+                var offset = (blocks[startAt].renderWidth / this.columnWidth) - 1;
+                cell = this.arr[cell.row][cell.column - offset];
+            }
+            else if (edgeType == "bottom") {
+                var offset = (blocks[startAt].renderHeight / this.rowHeight) - 1;
+                cell = this.arr[cell.row - offset][cell.column];
+            }
+           
+            if (this.makeBlockFit(blocks[startAt], cell)) {
+
+                blocks[startAt].startY = cell.getTopEdge();
+                blocks[startAt].startX = cell.getLeftEdge();
+                this.blockAdjacentCells(blocks[startAt], cell);
+                startAt++;
+
+            }
+        }        
+    },
+
+    /*
+    * Goes through the grid and collects all single edge cells
+    * @returns Array of single edge cells
+    */
+    getEdgeCells: function() {
+        var edgeCells = [];
+
+        for (var row = 0; row < this.arr.length; row++) {
+            for (var col = 0; col < this.arr[0].length; col++) {
+                if (this.getEdgeType(this.arr[row][col]).length == 1) {
+                    edgeCells.push(this.arr[row][col]);
+                }
+            }
+        }
+
+        return edgeCells;
+    },
+
+    /*
+    *
+    * @returns Array indicating which edge types the cell has.
+    */
+    getEdgeType: function(cell) {
+        var edgeTypes = [];
+
+        if (cell.row == 0) {
+            edgeTypes.push("top");
+        }
+
+        if (cell.row == this.arr.length - 1) {
+            edgeTypes.push("bottom");
+        }
+
+        if (cell.column == 0) {
+            edgeTypes.push("left");
+        }
+
+        if (cell.column == this.arr[0].length - 1) {
+            edgeTypes.push("right");
+        }
+        
+        
+
+        return edgeTypes;
     },
 
     /*
