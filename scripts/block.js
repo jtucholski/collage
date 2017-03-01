@@ -29,3 +29,4 @@ Block.prototype = {
         return scaledWidth;
     }
 };
+

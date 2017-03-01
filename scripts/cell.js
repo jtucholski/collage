@@ -4,6 +4,7 @@ Cell = function(row, column, height, width) {
     this.height = height;
     this.width = width;
     this.isAvailable = true;
+    this.isVoid = false;
 }
 
 

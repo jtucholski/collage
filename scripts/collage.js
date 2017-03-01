@@ -57,6 +57,17 @@ Collage.prototype = {
 
     },
 
+    addVoid: function(cellStartY, cellStartX, cellEndY, cellEndX){
+
+        for (var row = cellStartY; row <= cellEndY; row++ ){
+            for (var col = cellStartX; col <= cellEndX; col++){
+                this.arr[row][col].isVoid = true;
+                this.arr[row][col].isAvailable = false;
+            }
+        }
+
+    },
+
     /*
     * Runs through the "corners" OR 2-edge squares on grid and makes
     * sure that an image is square with them.
@@ -124,17 +135,23 @@ Collage.prototype = {
     },
 
     /*
-    * Goes through the grid and collects all single edge cells
-    * @returns Array of single edge cells
+    * Goes through the grid and collects all single edge (top edge, bottom edge, or top-bottom edge) edge cells
+    * @returns Array of single edge cells (top/bottom border counts as a single edge)
     */
     getEdgeCells: function() {
         var edgeCells = [];
 
         for (var row = 0; row < this.arr.length; row++) {
             for (var col = 0; col < this.arr[0].length; col++) {
-                if (this.getEdgeType(this.arr[row][col]).length == 1) {
+                var edges = this.getEdgeType(this.arr[row][col]);
+
+                if (edges.length == 1) {
                     edgeCells.push(this.arr[row][col]);
                 }
+                else if (edges.length == 2 &&
+                    ((edges[0] == "top" && edges[1] == "bottom") || (edges[0] == "left" && edges[1] == "right"))) {
+                    edgeCells.push(this.arr[row][col]);
+                }                
             }
         }
 
@@ -148,24 +165,22 @@ Collage.prototype = {
     getEdgeType: function(cell) {
         var edgeTypes = [];
 
-        if (cell.row == 0) {
+        if (cell.row == 0 || this.arr[cell.row-1][cell.column].isVoid) {
             edgeTypes.push("top");
         }
 
-        if (cell.row == this.arr.length - 1) {
+        if (cell.row == this.arr.length - 1 || this.arr[cell.row+1][cell.column].isVoid) {
             edgeTypes.push("bottom");
         }
 
-        if (cell.column == 0) {
+        if (cell.column == 0 || this.arr[cell.row][cell.column-1].isVoid) {
             edgeTypes.push("left");
         }
 
-        if (cell.column == this.arr[0].length - 1) {
+        if (cell.column == this.arr[0].length - 1 || this.arr[cell.row][cell.column+1].isVoid) {
             edgeTypes.push("right");
         }
-        
-        
-
+                
         return edgeTypes;
     },
 
