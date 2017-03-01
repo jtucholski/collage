@@ -542,7 +542,7 @@
                 //# of edges: 22
 
                 var collage = new Collage(50, 70, 10, 10);
-                collage.addVoid(1, 2, 3, 4) //[1,2] to [3,4]
+                collage.addVoid(1, 2, 3, 4); //[1,2] to [3,4]
 
                 var edges = collage.getEdgeCells();
 
@@ -553,6 +553,31 @@
                     collage.arr[2][0], collage.arr[2][1], collage.arr[2][5], collage.arr[2][6],
                     collage.arr[3][0], collage.arr[3][1], collage.arr[3][5], collage.arr[3][6],
                     collage.arr[4][1], collage.arr[4][2], collage.arr[4][3], collage.arr[4][4], collage.arr[4][5],
+                ], edges);
+            });
+
+            QUnit.test("Get Edge Test 2 Voids", function (assert) {
+
+                // O O O O O O O O O
+                // O O | | | O | | O
+                // O O |   | O | | O
+                // O O | | | O O O O
+                // O O O O O O O O O
+                //# of edges: 22
+
+                var collage = new Collage(50, 90, 10, 10);
+                collage.addVoid(1, 2, 3, 4); //[1,2] to [3,4]
+                collage.addVoid(1, 6, 2, 7);
+
+                var edges = collage.getEdgeCells();
+
+                assert.equal(edges.length, 28);
+                assert.deepEqual([
+                    collage.arr[0][1], collage.arr[0][2], collage.arr[0][3], collage.arr[0][4], collage.arr[0][5], collage.arr[0][6], collage.arr[0][7],
+                    collage.arr[1][0], collage.arr[1][1], collage.arr[1][5], collage.arr[1][8],
+                    collage.arr[2][0], collage.arr[2][1], collage.arr[2][5], collage.arr[2][8],
+                    collage.arr[3][0], collage.arr[3][1], collage.arr[3][5], collage.arr[3][6], collage.arr[3][7], collage.arr[3][8],
+                    collage.arr[4][1], collage.arr[4][2], collage.arr[4][3], collage.arr[4][4], collage.arr[4][5], collage.arr[4][6], collage.arr[4][7],
                 ], edges);
             });
         });
