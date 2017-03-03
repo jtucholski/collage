@@ -167,7 +167,7 @@
             });  
 
             QUnit.test("FitCorners Tests - 100x100 Block Four Corners", function (assert) {
-                var collage = new Collage(800, 800);
+                var collage = new Collage(800, 800, 100, 100);
                 var blocks = [
                     new Block(100, 100),
                     new Block(100, 100),
@@ -192,7 +192,7 @@
 
             QUnit.test("FitCorners Tests - Rectangle Blocks Four Corners", function (assert) {
 
-                var collage = new Collage(800, 800);
+                var collage = new Collage(800, 800, 100, 100);
                 var blocks = [
                     new Block(200, 100),
                     new Block(200, 200),
@@ -226,7 +226,7 @@
                     new Block(10, 10)
                 ];
 
-                collage.fitEdges(blocks, 0);
+                collage.fitEdges(blocks);
 
                 assert.equal(blocks[0].startX, collage.arr[0][1].getLeftEdge());
                 assert.equal(blocks[0].startY, collage.arr[0][1].getTopEdge());
@@ -259,7 +259,7 @@
                       new Block(10, 10), new Block(10, 10)        // O X X O
                 ];
 
-                collage.fitEdges(blocks, 0);
+                collage.fitEdges(blocks);
 
                 assert.equal(blocks[0].startX, collage.arr[0][1].getLeftEdge());
                 assert.equal(blocks[0].startY, collage.arr[0][1].getTopEdge());
@@ -289,7 +289,7 @@
                       new Block(20, 20),                          // O X X O
                 ];
 
-                collage.fitEdges(blocks, 0);
+                collage.fitEdges(blocks);
 
                 assert.equal(blocks[0].startX, collage.arr[0][1].getLeftEdge());
                 assert.equal(blocks[0].startY, collage.arr[0][1].getTopEdge());
@@ -530,6 +530,28 @@
                 assert.equal(false, collage.arr[3][5].isVoid);
                 assert.equal(false, collage.arr[4][2].isVoid);
                 assert.equal(false, collage.arr[5][5].isVoid);
+            });
+
+            QUnit.test("Get Corner Test w/Void", function (assert) {
+
+                // O O O O
+                // O O O O
+                // O O | |
+                // O O | |
+                // # of corners: 5
+
+                var collage = new Collage(40, 40, 10, 10);
+                collage.addVoid(2, 2, 3, 3);
+
+                var corners = collage.getCornerCells();
+
+                assert.equal(corners.length, 5);
+                assert.deepEqual([
+                    collage.arr[0][0], collage.arr[0][3],
+                    collage.arr[1][3],
+                    collage.arr[3][0], collage.arr[3][1]
+                ], corners);
+
             });
 
             QUnit.test("Get Edge Test Including Void", function (assert) {

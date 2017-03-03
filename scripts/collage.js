@@ -9,6 +9,7 @@ Collage = function (height, width, rowHeight, columnWidth) {
 
     this.rowHeight = rowHeight;
     this.columnWidth = columnWidth;
+    this.blockNumber = 0;
 
     this.initializeGrid(height, width);
 }
@@ -16,12 +17,12 @@ Collage = function (height, width, rowHeight, columnWidth) {
 Collage.prototype = {
 
     fit: function (blocks) {
+
         this.fitCorners(blocks);
+        this.fitEdges(blocks);
 
         var numRows = this.arr.length;
-        var numColumns = this.arr[0].length;
-
-        var blockNumber = 4;
+        var numColumns = this.arr[0].length;        
 
         for (var row = 0; row < numRows; row++) {
             for (var col = 0; col < numColumns; col++) {
@@ -30,11 +31,11 @@ Collage.prototype = {
                     continue;
                 }
                 else {
-                    if (this.makeBlockFit(blocks[blockNumber], this.arr[row][col])) {
-                        blocks[blockNumber].startX = this.arr[row][col].getLeftEdge();
-                        blocks[blockNumber].startY = this.arr[row][col].getTopEdge();
-                        this.blockAdjacentCells(blocks[blockNumber], this.arr[row][col]);
-                        blockNumber++;
+                    if (this.makeBlockFit(blocks[this.blockNumber], this.arr[row][col])) {
+                        blocks[this.blockNumber].startX = this.arr[row][col].getLeftEdge();
+                        blocks[this.blockNumber].startY = this.arr[row][col].getTopEdge();
+                        this.blockAdjacentCells(blocks[this.blockNumber], this.arr[row][col]);
+                        this.blockNumber++;
                     }
                 }
             }
@@ -75,37 +76,40 @@ Collage.prototype = {
     */
     fitCorners: function (blocks) {
 
-        var lastColumn = this.arr[0].length - 1;
-        var lastRow = this.arr.length - 1;
+        var corners = this.getCornerCells();
 
-        blocks[0].startX = this.arr[0][0].getLeftEdge();
-        blocks[0].startY = this.arr[0][0].getTopEdge();
-        this.blockAdjacentCells(blocks[0], this.arr[0][0]);
+        for (var i = 0; i < corners.length; i++) {
 
-        blocks[1].startX = this.arr[0][lastColumn].getRightEdge() - blocks[1].renderWidth;
-        blocks[1].startY = this.arr[0][lastColumn].getTopEdge();
-        this.blockAdjacentCells(blocks[1], this.arr[0][this.getColumnIndex(blocks[1].startX)]);
+            var block = blocks[this.blockNumber];
+            var cell = corners[i];
+            var edgeType = this.getEdgeType(cell);
 
-        blocks[2].startX = this.arr[lastRow][0].getLeftEdge();
-        blocks[2].startY = this.arr[lastRow][0].getBottomEdge() - blocks[2].renderHeight;
-        this.blockAdjacentCells(blocks[2], this.arr[this.getRowIndex(blocks[2].startY)][0]);
-
-        blocks[3].startX = this.arr[lastRow][lastColumn].getRightEdge() - blocks[3].renderWidth;
-        blocks[3].startY = this.arr[lastRow][lastColumn].getBottomEdge() - blocks[3].renderHeight;
-        this.blockAdjacentCells(blocks[3], this.arr[this.getRowIndex(blocks[3].startY)][this.getColumnIndex(blocks[3].startX)]);
-
-        return 4;
+            if (edgeType[0] == "bottom") {
+                var offset = (block.renderHeight / this.rowHeight) - 1;
+                cell = this.arr[cell.row - offset][cell.column];
+            }
+            if (edgeType[1] == "right") {
+                var offset = (block.renderWidth / this.columnWidth) - 1;
+                cell = this.arr[cell.row][cell.column - offset];
+            }
+            
+            block.startX = cell.getLeftEdge();
+            block.startY = cell.getTopEdge();
+            this.blockAdjacentCells(block, cell);
+            
+            this.blockNumber++;            
+        }
     },
 
     /*
     * Runs through each of the single edge squares available in the grid making
     * sure that an image it square with the edge.
     */
-    fitEdges: function(blocks, startAt){
+    fitEdges: function(blocks){
         var edgeCells = this.getEdgeCells();
 
         for (var i = 0; i < edgeCells.length; i++) {
-            
+            var block = blocks[this.blockNumber];
             var cell = edgeCells[i];
             var edgeType = this.getEdgeType(cell)[0];
 
@@ -115,23 +119,45 @@ Collage.prototype = {
 
             // Offset the Top-Left corner if on right side
             if (edgeType == "right") {
-                var offset = (blocks[startAt].renderWidth / this.columnWidth) - 1;
+                var offset = (block.renderWidth / this.columnWidth) - 1;
                 cell = this.arr[cell.row][cell.column - offset];
             }
             else if (edgeType == "bottom") {
-                var offset = (blocks[startAt].renderHeight / this.rowHeight) - 1;
+                var offset = (block.renderHeight / this.rowHeight) - 1;
                 cell = this.arr[cell.row - offset][cell.column];
             }
            
-            if (this.makeBlockFit(blocks[startAt], cell)) {
+            if (this.makeBlockFit(block, cell)) {
 
-                blocks[startAt].startY = cell.getTopEdge();
-                blocks[startAt].startX = cell.getLeftEdge();
-                this.blockAdjacentCells(blocks[startAt], cell);
-                startAt++;
+                block.startY = cell.getTopEdge();
+                block.startX = cell.getLeftEdge();
+                this.blockAdjacentCells(block, cell);
+                this.blockNumber++;
 
             }
         }        
+    },
+
+    getCornerCells: function() { 
+        var cornerCells = [];
+
+        for (var row = 0; row < this.arr.length; row++) {
+            for (var col = 0; col < this.arr[0].length; col++) {
+
+                if (this.arr[row][col].isVoid) {
+                    continue;
+                }
+
+                var edges = this.getEdgeType(this.arr[row][col]);
+                
+                if (edges.length == 2 &&
+                    ((edges[0] == "top") || edges[0] == "bottom")) {
+                    cornerCells.push(this.arr[row][col]);
+                }
+            }
+        }
+
+        return cornerCells;
     },
 
     /*
