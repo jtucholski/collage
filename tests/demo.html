@@ -1,0 +1,49 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta charset="utf-8" />
+    <script src="../scripts/cell.js"></script>
+    <script src="../scripts/block.js"></script>
+    <script src="../scripts/collage.js"></script>
+    <script src="imaging.js"></script>
+    <script src="canvas.js"></script>
+</head>
+<body>
+
+    <canvas id="collage" width="900" height="900" style="background-color: #4d4d4d;"></canvas>
+
+    <script type="text/javascript">
+
+        function loadImages(sources, callback) {
+            var images = [];
+            var loadedImages = 0;
+            var numImages = 0;
+            // get num of sources
+            for (var src in sources) {
+                numImages++;
+            }
+            for (var src in sources) {
+                images[src] = new Image();
+                images[src].onload = function () {                    
+                    if (++loadedImages >= numImages) {
+                        callback(images);
+                    }
+                };
+                images[src].src = 'images/' + sources[src];
+            }
+        }
+
+        //var images = ['a.jpg'];
+
+        var images = ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg', 'f.jpg', 'g.jpg', 'h.jpg', 'i.jpg', 'j.jpg', 'k.JPG', 'l.JPG',
+        'm.JPG', 'n.JPG', 'o.JPG', 'p.jpg', 'q.JPG', 'a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg', 'f.jpg', 'g.jpg', 'h.jpg', 'i.jpg', 'j.jpg', 'k.JPG', 'l.JPG',
+        'm.JPG', 'n.JPG', 'o.JPG', 'p.jpg', 'q.JPG', 'a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg', 'f.jpg', 'g.jpg', 'h.jpg', 'i.jpg', 'j.jpg', 'k.JPG', 'l.JPG',
+        'm.JPG', 'n.JPG', 'o.JPG', 'p.jpg', 'q.JPG'];
+        
+
+        loadImages(images, loadCanvas);
+    </script>
+
+</body>
+</html>

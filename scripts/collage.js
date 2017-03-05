@@ -1,4 +1,4 @@
-Collage = function (height, width, rowHeight, columnWidth) {
+Collage = function (height, width, rowHeight, columnWidth, debugCallback) {
 
     if (rowHeight == undefined) {
         rowHeight = 10;
@@ -10,6 +10,7 @@ Collage = function (height, width, rowHeight, columnWidth) {
     this.rowHeight = rowHeight;
     this.columnWidth = columnWidth;
     this.blockNumber = 0;
+    this.debugCallback = debugCallback;
 
     this.initializeGrid(height, width);
 }
@@ -27,6 +28,10 @@ Collage.prototype = {
         for (var row = 0; row < numRows; row++) {
             for (var col = 0; col < numColumns; col++) {
 
+                if (blocks[this.blockNumber] == undefined) {
+                    return;
+                }
+
                 if (!this.arr[row][col].isAvailable) {
                     continue;
                 }
@@ -35,6 +40,11 @@ Collage.prototype = {
                         blocks[this.blockNumber].startX = this.arr[row][col].getLeftEdge();
                         blocks[this.blockNumber].startY = this.arr[row][col].getTopEdge();
                         this.blockAdjacentCells(blocks[this.blockNumber], this.arr[row][col]);
+
+                        if (this.debugCallback != undefined) {
+                            this.debugCallback(this.blockNumber);
+                        }
+
                         this.blockNumber++;
                     }
                 }
@@ -81,22 +91,39 @@ Collage.prototype = {
         for (var i = 0; i < corners.length; i++) {
 
             var block = blocks[this.blockNumber];
+
+            if (block == undefined) {
+                return;
+            }
+
             var cell = corners[i];
             var edgeType = this.getEdgeType(cell);
 
             if (edgeType[0] == "bottom") {
-                var offset = (block.renderHeight / this.rowHeight) - 1;
+                block.startY = cell.getBottomEdge() - block.renderHeight;
+                var offset = Math.ceil((block.renderHeight / this.rowHeight) - 1);
                 cell = this.arr[cell.row - offset][cell.column];
             }
-            if (edgeType[1] == "right") {
-                var offset = (block.renderWidth / this.columnWidth) - 1;
-                cell = this.arr[cell.row][cell.column - offset];
+            else {
+                block.startY = cell.getTopEdge();
             }
             
-            block.startX = cell.getLeftEdge();
-            block.startY = cell.getTopEdge();
+            if (edgeType[1] == "right") {
+                block.startX = cell.getRightEdge() - block.renderWidth;
+                var offset = Math.ceil((block.renderWidth / this.columnWidth) - 1);
+                cell = this.arr[cell.row][cell.column - offset];
+            }
+            else {
+                block.startX = cell.getLeftEdge();
+            }
+            
+            
             this.blockAdjacentCells(block, cell);
             
+            if (this.debugCallback != undefined) {
+                this.debugCallback(this.blockNumber);
+            }
+
             this.blockNumber++;            
         }
     },
@@ -110,6 +137,11 @@ Collage.prototype = {
 
         for (var i = 0; i < edgeCells.length; i++) {
             var block = blocks[this.blockNumber];
+
+            if (block == undefined) {
+                return;
+            }
+
             var cell = edgeCells[i];
             var edgeType = this.getEdgeType(cell)[0];
 
@@ -119,11 +151,11 @@ Collage.prototype = {
 
             // Offset the Top-Left corner if on right side
             if (edgeType == "right") {
-                var offset = (block.renderWidth / this.columnWidth) - 1;
+                var offset = Math.floor((block.renderWidth / this.columnWidth) - 1);
                 cell = this.arr[cell.row][cell.column - offset];
             }
             else if (edgeType == "bottom") {
-                var offset = (block.renderHeight / this.rowHeight) - 1;
+                var offset = Math.floor((block.renderHeight / this.rowHeight) - 1);
                 cell = this.arr[cell.row - offset][cell.column];
             }
            
@@ -132,6 +164,11 @@ Collage.prototype = {
                 block.startY = cell.getTopEdge();
                 block.startX = cell.getLeftEdge();
                 this.blockAdjacentCells(block, cell);
+
+                if (this.debugCallback != undefined) {
+                    this.debugCallback(this.blockNumber);
+                }
+
                 this.blockNumber++;
 
             }
@@ -257,7 +294,7 @@ Collage.prototype = {
             
             // Check to see if it fits
             for (var row = startingCell.row; row < (startingCell.row + ratioRows) && canFit; row++) {
-                for (var col = startingCell.column; col < (startingCell.column + ratioCols); col++) {
+                for (var col = startingCell.column; col < (startingCell.column + ratioCols) && col < this.arr[row].length; col++) {
                     if (!this.arr[row][col].isAvailable) {
                         canFit = false;
                         break;
@@ -288,7 +325,7 @@ Collage.prototype = {
     },
 
     /* 
-    * @block the block object being to be started in the top-left of adjacent cells
+    * @block the block object to be started in the top-left of adjacent cells
     * @cell the top-left corner of the block
     */
     blockAdjacentCells: function (block, cell) {
@@ -296,11 +333,11 @@ Collage.prototype = {
         var remainingHeight = block.renderHeight;
         var row = cell.row;
 
-        while (remainingHeight >= cell.height) {
+        while (remainingHeight >= (cell.height / 2)) {
             var remainingWidth = block.renderWidth;
             var col = cell.column;
 
-            while (remainingWidth >= cell.width) {
+            while (remainingWidth >= (cell.width / 2)) {
 
                 this.arr[row][col].isAvailable = false;
 
@@ -311,5 +348,7 @@ Collage.prototype = {
             remainingHeight -= cell.height;
             row++;
         }
+
+        block.fit = true;
     },
 }
