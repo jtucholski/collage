@@ -15,20 +15,21 @@ function loadCanvas(images) {
     var blocks = [];
 
     for (var i = 0; i < images.length; i++) {
-        var mask = getImageMask(images[i]);
-        var ratio = getAspectRatio(mask.width, mask.height);        
-
-        var block = new Block(ratio.height, ratio.width);
-
+        var mask = getImageMask(images[i]);        
+        var block = new Block(mask.height, mask.width);
         masks.push(mask);
         blocks.push(block);        
-    }        
+    }
+    
+    context.scale(0.5, 0.5);
 
     var collage = new Collage(canvas.height, canvas.width, 10, 10, function (index) {
         context.drawImage(masks[index], blocks[index].startX, blocks[index].startY, blocks[index].renderWidth, blocks[index].renderHeight);
     });
-    //drawBoard(canvas, context, collage.rowHeight, collage.columnWidth);
+    
     collage.fit(blocks);
+
+    
 
     //for (var i = 0; i < masks.length; i++) {
     //    if (blocks[i].fit) {            

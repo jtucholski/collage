@@ -11,7 +11,7 @@
 </head>
 <body>
 
-    <canvas id="collage" width="900" height="900" style="background-color: #4d4d4d;"></canvas>
+    <canvas id="collage" width="3200" height="3200"></canvas>
 
     <script type="text/javascript">
 
@@ -32,14 +32,12 @@
                 };
                 images[src].src = 'images/' + sources[src];
             }
-        }
+        }        
 
-        //var images = ['a.jpg'];
-
-        var images = ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg', 'f.jpg', 'g.jpg', 'h.jpg', 'i.jpg', 'j.jpg', 'k.JPG', 'l.JPG',
-        'm.JPG', 'n.JPG', 'o.JPG', 'p.jpg', 'q.JPG', 'a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg', 'f.jpg', 'g.jpg', 'h.jpg', 'i.jpg', 'j.jpg', 'k.JPG', 'l.JPG',
-        'm.JPG', 'n.JPG', 'o.JPG', 'p.jpg', 'q.JPG', 'a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg', 'f.jpg', 'g.jpg', 'h.jpg', 'i.jpg', 'j.jpg', 'k.JPG', 'l.JPG',
+        var images = ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg', 'f.jpg', 'h.jpg', 'i.jpg', 'j.jpg', 'k.JPG', 'l.JPG',
+        'm.JPG', 'n.JPG', 'o.JPG', 'p.jpg', 'q.JPG', 'a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg', 'f.jpg', 'h.jpg', 'i.jpg', 'j.jpg', 'k.JPG', 'l.JPG',
         'm.JPG', 'n.JPG', 'o.JPG', 'p.jpg', 'q.JPG'];
+        //var images = ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg'];
         
 
         loadImages(images, loadCanvas);

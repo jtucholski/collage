@@ -1,3 +1,4 @@
+/// <reference path="block.js" />
 Collage = function (height, width, rowHeight, columnWidth, debugCallback) {
 
     if (rowHeight == undefined) {
@@ -19,9 +20,10 @@ Collage.prototype = {
 
     fit: function (blocks) {
 
-        this.fitCorners(blocks);
+        this.fitCorners(blocks);               
         this.fitEdges(blocks);
-
+        return;
+        
         var numRows = this.arr.length;
         var numColumns = this.arr[0].length;        
 
@@ -80,7 +82,7 @@ Collage.prototype = {
     },
 
     /*
-    * Runs through the "corners" OR 2-edge squares on grid and makes
+    * Gets 2-edge squares (corners) in grid and makes
     * sure that an image is square with them.
     * @returns number of blocks fitted
     */
@@ -101,8 +103,8 @@ Collage.prototype = {
 
             if (edgeType[0] == "bottom") {
                 block.startY = cell.getBottomEdge() - block.renderHeight;
-                var offset = Math.ceil((block.renderHeight / this.rowHeight) - 1);
-                cell = this.arr[cell.row - offset][cell.column];
+                var heightOffset = Math.ceil((block.renderHeight / this.rowHeight) - 1);
+                cell = this.arr[cell.row - heightOffset][cell.column];
             }
             else {
                 block.startY = cell.getTopEdge();
@@ -110,8 +112,8 @@ Collage.prototype = {
             
             if (edgeType[1] == "right") {
                 block.startX = cell.getRightEdge() - block.renderWidth;
-                var offset = Math.ceil((block.renderWidth / this.columnWidth) - 1);
-                cell = this.arr[cell.row][cell.column - offset];
+                var columnOffset = Math.ceil((block.renderWidth / this.columnWidth) - 1);
+                cell = this.arr[cell.row][cell.column - columnOffset];
             }
             else {
                 block.startX = cell.getLeftEdge();
@@ -264,30 +266,47 @@ Collage.prototype = {
     /*
     * Determines if a block will still fit within the available space.
     */
-    makeBlockFit: function (block, startingCell) {
+    makeBlockFit: function (block, startingCell, scale, increaseFactor) {
 
+        if (scale == undefined) {
+            scale = 1;
+        }
+
+        if (increaseFactor == undefined) {
+            increaseFactor = 1;
+        }
+        
+        // Get Max Dimensions
         var maxRows = block.renderHeight / this.rowHeight;
         var maxCols = block.renderWidth / this.columnWidth;
-
         if (maxRows < 1 || maxCols < 1) {
             return false;
         }
-
-        // Get Smallest Block Ratio
-        var scaleFactor = 1;
+                
         var scaleRatio = null;        
         var canFit = true;                
 
         while (canFit) {
-            // Scale it by N            
-            var testRatio = {
-                height: block.calculateScaledHeight(this.columnWidth * scaleFactor),
-                width: this.columnWidth * scaleFactor
-            };
+
+            // Scale it by N 
+            var testRatio = {};
+            if (block.renderWidth > block.remainingHeight) {
+                testRatio = {
+                    height: Math.round(this.rowHeight * scale),
+                    width: Math.round(block.calculateScaledWidth(this.rowHeight * scale))
+                };
+            }
+            else {
+                testRatio = {
+                    width: Math.round(this.columnWidth * scale),
+                    height: Math.round(block.calculateScaledHeight(this.columnWidth * scale)),
+                };
+            }
+
+            // Calculate the ratio size
             var ratioRows = testRatio.height / this.rowHeight;
             var ratioCols = testRatio.width / this.columnWidth;
 
-            // Don't go too big
             if (ratioRows > maxRows || ratioCols > maxCols) {
                 break;
             }            
@@ -296,7 +315,7 @@ Collage.prototype = {
             for (var row = startingCell.row; row < (startingCell.row + ratioRows) && canFit; row++) {
                 for (var col = startingCell.column; col < (startingCell.column + ratioCols) && col < this.arr[row].length; col++) {
                     if (!this.arr[row][col].isAvailable) {
-                        canFit = false;
+                        canFit = false;                        
                         break;
                     }
                 }
@@ -304,7 +323,8 @@ Collage.prototype = {
 
             // If it can, try increasing by factor of n
             if (canFit) { 
-                scaleFactor++;
+                scale += increaseFactor;
+                scale = parseFloat(scale.toFixed(1));
                 scaleRatio = testRatio;                
             }            
         }

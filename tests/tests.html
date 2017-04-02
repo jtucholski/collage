@@ -160,14 +160,15 @@
 
         QUnit.module("Grid", function() {
         
+            // Makes sure proper size array is created
             QUnit.test("Grid Generation", function (assert) {
-
-                var collage = new Collage(100, 200);
+                
+                var collage = new Collage(100, 200, 10, 10);
 
                 assert.equal(collage.arr.length, 10);
                 assert.equal(collage.arr[0].length, 20);
 
-                var collage = new Collage(200, 100);
+                var collage = new Collage(200, 100, 10, 10);
 
                 assert.equal(collage.arr.length, 20);
                 assert.equal(collage.arr[0].length, 10);
@@ -177,6 +178,7 @@
 
         QUnit.module("Grid Fit", function () {
 
+            // Makes sure pictures are fixed in the corners.
             QUnit.test("FitCorners - Imperfect Fit", function (assert) {
 
                 var collage = new Collage(100, 100, 10, 10);
@@ -202,58 +204,7 @@
                 assert.equal(blocks[3].startX, 92.5);
                 assert.equal(blocks[3].startY, 92.5);
             });
-
-            
-
-            QUnit.test("FitCorners Tests - 100x100 Block Four Corners", function (assert) {
-                var collage = new Collage(800, 800, 100, 100);
-                var blocks = [
-                    new Block(100, 100),
-                    new Block(100, 100),
-                    new Block(100, 100),
-                    new Block(100, 100)
-                ];
-
-                collage.fitCorners(blocks);
-
-                assert.equal(blocks[0].startX, 0);
-                assert.equal(blocks[0].startY, 0);
-
-                assert.equal(blocks[1].startX, 700);
-                assert.equal(blocks[1].startY, 0);
-
-                assert.equal(blocks[2].startX, 0);
-                assert.equal(blocks[2].startY, 700);
-
-                assert.equal(blocks[3].startX, 700);
-                assert.equal(blocks[3].startY, 700);
-            });
-
-            QUnit.test("FitCorners Tests - Rectangle Blocks Four Corners", function (assert) {
-
-                var collage = new Collage(800, 800, 100, 100);
-                var blocks = [
-                    new Block(200, 100),
-                    new Block(200, 200),
-                    new Block(100, 200),
-                    new Block(200, 200)                    
-                ];
-
-                collage.fitCorners(blocks);
-
-                assert.equal(blocks[0].startX, 0);
-                assert.equal(blocks[0].startY, 0);
-
-                assert.equal(blocks[1].startX, 600);
-                assert.equal(blocks[1].startY, 0);
-
-                assert.equal(blocks[2].startX, 0);
-                assert.equal(blocks[2].startY, 700);
-
-                assert.equal(blocks[3].startX, 600);
-                assert.equal(blocks[3].startY, 600);
-            });
-
+           
             QUnit.test("FitEdges Test - Perfect Fits", function (assert) {
 
                 var collage = new Collage(40, 40, 10, 10);                
@@ -447,24 +398,32 @@
                 assert.equal(collage.arr[3][6].isAvailable, false);
             });
 
-            QUnit.test("Exact Fit", function (assert) {
+        });
+        QUnit.module("Make Fit", function () {
 
-                var collage = new Collage(100, 100, 10, 10);
-                var block = new Block(20, 20);
+            QUnit.test("Fit, No Resizing Needed", function (assert) {
 
-                collage.arr[0][2].isAvailable = false;
-                collage.arr[1][2].isAvailable = false;
-                collage.arr[2][0].isAvailable = false;
-                collage.arr[2][1].isAvailable = false;
+                var collage = new Collage(1000, 1000, 72, 72);
+                var block = new Block(576, 432);
 
-                assert.equal(collage.makeBlockFit(block, collage.arr[0][0]), true);
-                assert.equal(block.renderHeight, 20);
-                assert.equal(block.renderWidth, 20);
+                assert.equal(collage.makeBlockFit(block, collage.arr[0][0], 6, 0.1), true);
+                assert.equal(block.renderHeight, 576);
+                assert.equal(block.renderWidth, 432);                
             });
+
+            QUnit.test("Fit, Not Perfect Column Match", function (assert) {
+
+                var collage = new Collage(1000, 1000, 72, 72);
+                var block = new Block(640, 480);
+
+                assert.equal(collage.makeBlockFit(block, collage.arr[0][0], 6, 0.1), true);
+                assert.equal(block.renderHeight, 634);
+                assert.equal(block.renderWidth, 476);
+            }); 
 
             QUnit.test("Too Wide (Square) - Should Resize", function (assert) {
 
-                var collage = new Collage(100, 100, 10, 10);
+                var collage = new Collage(1000, 1000, 10, 10);
                 var block = new Block(30, 30);
 
                 collage.arr[0][2].isAvailable = false;

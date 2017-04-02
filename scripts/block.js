@@ -6,14 +6,14 @@
 Block.prototype = {
 
     scaleToWidth: function (desiredWidth) {
-        var resizedHeight = this.calculateScaledHeight(desiredWidth);
+        var resizedHeight = Math.round(this.calculateScaledHeight(desiredWidth));
 
         this.renderHeight = resizedHeight;
         this.renderWidth = desiredWidth;
     },
 
     scaleToHeight: function (desiredHeight) {
-        var resizedWidth = this.calculateScaledWidth(desiredHeight);
+        var resizedWidth = Math.round(this.calculateScaledWidth(desiredHeight));
 
         this.renderHeight = desiredHeight;
         this.renderWidth = resizedWidth;
