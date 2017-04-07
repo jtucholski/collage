@@ -1,6 +1,10 @@
-﻿Block = function (renderHeight, renderWidth) {
+﻿Block = function (renderHeight, renderWidth, startingScale, increaseFactor) {
     this.renderHeight = renderHeight;
     this.renderWidth = renderWidth;
+    
+    this.startingScale = (startingScale == undefined) ? 1 : startingScale;
+    this.increaseFactor = (increaseFactor == undefined) ? 1 : increaseFactor;
+
 }
 
 Block.prototype = {
