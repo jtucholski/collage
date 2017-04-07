@@ -13,7 +13,7 @@
     mctx.shadowColor = 'black';
     mctx.shadowOffsetX = mask.width;
     mctx.shadowOffsetY = 0;
-    mctx.shadowBlur = 30;
+    mctx.shadowBlur = 40;
 
     drawRoundedRectangle(mctx, 20, 20, image.width - 40, image.height - 40, 20);
 

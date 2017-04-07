@@ -16,14 +16,14 @@ function loadCanvas(images) {
 
     for (var i = 0; i < images.length; i++) {
         var mask = getImageMask(images[i]);        
-        var block = new Block(mask.height, mask.width);
+        var block = new Block(mask.height, mask.width, 5, 0.1);
         masks.push(mask);
         blocks.push(block);        
     }
     
     context.scale(0.5, 0.5);
 
-    var collage = new Collage(canvas.height, canvas.width, 10, 10, function (index) {
+    var collage = new Collage(canvas.height, canvas.width, 72, 72, function (index) {
         context.drawImage(masks[index], blocks[index].startX, blocks[index].startY, blocks[index].renderWidth, blocks[index].renderHeight);
     });
     
@@ -37,6 +37,7 @@ function loadCanvas(images) {
     //    }
     //}
 
+    drawBoard(canvas, context, 72, 72);
     
     grayScale(context, canvas);
 }

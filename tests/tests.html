@@ -300,6 +300,18 @@
                 assert.equal(blocks[6].startY, collage.arr[2][1].getTopEdge());
             });
 
+            QUnit.test("Block Adjacent Cells - Partial Fill up to Bound of Collage", function (assert) {
+
+                var collage = new Collage(3200, 3200, 72, 72);
+                var block = new Block(634, 476);
+
+                collage.blockAdjacentCells(block, collage.arr[18][39]);
+
+                assert.equal(collage.arr[18][39].isAvailable, false);
+                assert.equal(collage.arr[18][44].isAvailable, false);
+
+            });
+
             QUnit.test("Block Adjacent Cells - Less than 50% Width/Height - Expect Available", function (assert) {
 
                 var collage = new Collage(100, 100, 10, 10);
@@ -399,14 +411,50 @@
             });
 
         });
+
+        QUnit.module("Can Fit", function () {
+
+            QUnit.test("Can Fit, No Blocks", function (assert) {
+
+                var collage = new Collage(100, 100, 10, 10);
+                
+                assert.equal(collage.checkForFreeCells(0, 0, 4, 4), true);                
+                assert.equal(collage.checkForFreeCells(1, 1, 5, 5), true);
+            });
+
+            QUnit.test("Can Fit, existing blocks on grid", function (assert) {
+
+                var collage = new Collage(100, 100, 10, 10);
+
+                collage.arr[8][8].isAvailable = false;
+                
+                assert.equal(collage.checkForFreeCells(0, 0, 2, 2), true);                
+                assert.equal(collage.checkForFreeCells(0, 0, 9, 9), false);                
+            });
+
+            
+        });
+
         QUnit.module("Make Fit", function () {
+
+            QUnit.test("Fit, Min Scale Exceeds Original Size and Should Use Original Dimensions", function (assert) {
+
+                var collage = new Collage(1000, 1000, 72, 72);
+                var block = new Block(648, 365, 6, 0.1);
+
+                assert.equal(collage.makeBlockFit(block, collage.arr[0][0]), true);
+                assert.equal(block.fit, true);
+                assert.equal(block.renderHeight, 648);
+                assert.equal(block.renderWidth, 365);
+
+            });
 
             QUnit.test("Fit, No Resizing Needed", function (assert) {
 
                 var collage = new Collage(1000, 1000, 72, 72);
-                var block = new Block(576, 432);
+                var block = new Block(576, 432, 6, 0.1);
 
-                assert.equal(collage.makeBlockFit(block, collage.arr[0][0], 6, 0.1), true);
+                assert.equal(collage.makeBlockFit(block, collage.arr[0][0]), true);
                 assert.equal(block.renderHeight, 576);
                 assert.equal(block.renderWidth, 432);                
             });
@@ -414,9 +462,9 @@
             QUnit.test("Fit, Not Perfect Column Match", function (assert) {
 
                 var collage = new Collage(1000, 1000, 72, 72);
-                var block = new Block(640, 480);
+                var block = new Block(640, 480, 6, 0.1);
 
-                assert.equal(collage.makeBlockFit(block, collage.arr[0][0], 6, 0.1), true);
+                assert.equal(collage.makeBlockFit(block, collage.arr[0][0]), true);
                 assert.equal(block.renderHeight, 634);
                 assert.equal(block.renderWidth, 476);
             }); 

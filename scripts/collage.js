@@ -163,8 +163,8 @@ Collage.prototype = {
            
             if (this.makeBlockFit(block, cell)) {
 
-                block.startY = cell.getTopEdge();
-                block.startX = cell.getLeftEdge();
+                block.startY = (edgeType == "bottom") ? edgeCells[i].getBottomEdge() - block.renderHeight : cell.getTopEdge();
+                block.startX = (edgeType == "right") ? edgeCells[i].getRightEdge() - block.renderWidth : cell.getLeftEdge();
                 this.blockAdjacentCells(block, cell);
 
                 if (this.debugCallback != undefined) {
@@ -266,16 +266,8 @@ Collage.prototype = {
     /*
     * Determines if a block will still fit within the available space.
     */
-    makeBlockFit: function (block, startingCell, scale, increaseFactor) {
-
-        if (scale == undefined) {
-            scale = 1;
-        }
-
-        if (increaseFactor == undefined) {
-            increaseFactor = 1;
-        }
-        
+    makeBlockFit: function (block, startingCell) {
+                
         // Get Max Dimensions
         var maxRows = block.renderHeight / this.rowHeight;
         var maxCols = block.renderWidth / this.columnWidth;
@@ -284,7 +276,8 @@ Collage.prototype = {
         }
                 
         var scaleRatio = null;        
-        var canFit = true;                
+        var canFit = true;
+        var scale = block.startingScale;
 
         while (canFit) {
 
@@ -308,22 +301,20 @@ Collage.prototype = {
             var ratioCols = testRatio.width / this.columnWidth;
 
             if (ratioRows > maxRows || ratioCols > maxCols) {
+
+                if (scaleRatio == null && this.checkForFreeCells(startingCell.row, startingCell.column, ratioRows, ratioCols)) {
+                    scaleRatio = { width: block.renderWidth, height: block.renderHeight };                    
+                }
+                
                 break;
             }            
-            
-            // Check to see if it fits
-            for (var row = startingCell.row; row < (startingCell.row + ratioRows) && canFit; row++) {
-                for (var col = startingCell.column; col < (startingCell.column + ratioCols) && col < this.arr[row].length; col++) {
-                    if (!this.arr[row][col].isAvailable) {
-                        canFit = false;                        
-                        break;
-                    }
-                }
-            }
+
+            // Check to see if the test ratio fits it fits
+            canFit = this.checkForFreeCells(startingCell.row, startingCell.column, ratioRows, ratioCols);            
 
             // If it can, try increasing by factor of n
             if (canFit) { 
-                scale += increaseFactor;
+                scale += block.increaseFactor;
                 scale = parseFloat(scale.toFixed(1));
                 scaleRatio = testRatio;                
             }            
@@ -339,9 +330,27 @@ Collage.prototype = {
             block.fit = true;
             return true;
         }
-        else {
-            return false;
-        }                
+        
+        return false;
+                        
+    },
+
+    checkForFreeCells: function (startingRow, startingColumn, heightInRows, widthInColumns) {
+
+        var canFit = true;
+        var maxRowIndex = (startingRow + heightInRows) >= this.arr.length ? this.arr.length : (startingRow + heightInRows);
+        var maxColIndex = (startingColumn + widthInColumns) >= this.arr[0].length ? this.arr[0].length : (startingColumn + widthInColumns);
+        
+        for (var row = startingRow; row < maxRowIndex && canFit; row++) {
+            for (var col = startingColumn; col < maxColIndex; col++) {
+                if (!this.arr[row][col].isAvailable) {
+                    canFit = false;
+                    break;
+                }
+            }
+        }        
+
+        return canFit;
     },
 
     /* 
@@ -353,11 +362,11 @@ Collage.prototype = {
         var remainingHeight = block.renderHeight;
         var row = cell.row;
 
-        while (remainingHeight >= (cell.height / 2)) {
+        while (remainingHeight >= (cell.height / 2) && row < this.arr.length) {
             var remainingWidth = block.renderWidth;
             var col = cell.column;
 
-            while (remainingWidth >= (cell.width / 2)) {
+            while (remainingWidth >= (cell.width / 2) && col < this.arr[row].length) {
 
                 this.arr[row][col].isAvailable = false;
 
