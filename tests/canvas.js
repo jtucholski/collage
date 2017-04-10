@@ -46,13 +46,13 @@ function drawBoard(canvas, context, rowHeight, columnWidth) {
     var bh = canvas.height;
     var bw = canvas.width;
     var p = 0;
-    for (var x = 0; x <= bh; x += rowHeight) {
+    for (var x = 0; x <= bw + columnWidth; x += columnWidth) {
         context.moveTo(0 + x + p, p);
         context.lineTo(0 + x + p, bh + p);
     }
 
 
-    for (var x = 0; x <= bw; x += columnWidth) {
+    for (var x = 0; x <= bh+rowHeight; x += rowHeight) {
         context.moveTo(p, 0 + x + p);
         context.lineTo(bw + p, 0 + x + p);
     }
