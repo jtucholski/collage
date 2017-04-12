@@ -10,22 +10,30 @@ function loadCanvas(images) {
     var canvas = document.getElementById('collage');
     var context = canvas.getContext('2d');
     
-
-    var masks = [];
+    
     var blocks = [];
-
+    
     for (var i = 0; i < images.length; i++) {
         var mask = getImageMask(images[i]);        
         var block = new Block(mask.height, mask.width, 5, 0.1);
-        masks.push(mask);
+        block.mask = mask;
+
+        if (i % 5 == 0) {
+            block.isHero = true;
+        }
+
+        
         blocks.push(block);        
     }
     
     context.scale(0.5, 0.5);
 
-    var collage = new Collage(canvas.height, canvas.width, 72, 72, function (index) {
-        context.drawImage(masks[index], blocks[index].startX, blocks[index].startY, blocks[index].renderWidth, blocks[index].renderHeight);
+    var collage = new Collage(canvas.height, canvas.width, 72, 72, function (block) {
+        context.drawImage(block.mask, block.startX, block.startY, block.renderWidth, block.renderHeight);
     });
+
+    
+
     
     collage.fit(blocks);
 

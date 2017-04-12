@@ -1,3 +1,5 @@
+const Overlap_Value = 30;
+
 /// <reference path="block.js" />
 Collage = function (height, width, rowHeight, columnWidth, debugCallback) {
 
@@ -8,11 +10,14 @@ Collage = function (height, width, rowHeight, columnWidth, debugCallback) {
         columnWidth = 10;
     }
 
+    this.height = height;
+    this.width = width;
     this.rowHeight = rowHeight;
     this.columnWidth = columnWidth;
     this.blockNumber = 0;
     this.debugCallback = debugCallback;
     this.blocks = null;
+    
 
     this.initializeGrid(height, width);
 }
@@ -34,16 +39,85 @@ Collage.prototype = {
         }
 
     },
-         
 
 
     fit: function (blocks) {
 
         this.blocks = blocks;
+        this.fitCorners(blocks);
 
-        this.fitCorners(blocks);        
+        return;
+    },
 
+    circle: function (root) {
+
+        var nextBlock = this.blocks.find(function (block) {
+            return !block.fit;
+        })
+
+        //top
+        var startY = root.startY - nextBlock.renderHeight + 40;
+        var startX = 0;
+
+        if (startY < 0) {
+            var remainingHeight = root.startY + 40;
+            nextBlock.scaleToHeight(remainingHeight);
+            startY = 0;
+        }
+
+        nextBlock.startY = startY;
+        nextBlock.startX = (root.startX + root.renderWidth / 2) - nextBlock.renderWidth/2;
+        nextBlock.fit = true;
+        this.debugCallback(nextBlock);
+
+        //right
+        nextBlock = this.blocks.find(function (block) {
+            return !block.fit;
+        });
+
+        var startX = root.startX + root.renderWidth - 40;
+
+        nextBlock.startX = startX;
+        nextBlock.startY = (root.startY + root.renderHeight / 2) - nextBlock.renderHeight / 2;
+        nextBlock.fit = true;
+        this.debugCallback(nextBlock);
+
+        //bottom
+        nextBlock = this.blocks.find(function (block) {
+            return !block.fit;
+        });        
+
+        nextBlock.startX = (root.startX + root.renderWidth / 2) - nextBlock.renderWidth / 2;
+        nextBlock.startY = root.startY + root.renderHeight - 40;
+        nextBlock.fit = true;
+        this.debugCallback(nextBlock);
+
+        //left
+        nextBlock = this.blocks.find(function (block) {
+            return !block.fit;
+        });
         
+        startX = root.startX - nextBlock.renderWidth + 40;
+        if (startX < 0) {
+            var remainingWidth = root.startX + 40;
+            nextBlock.scaleToWidth(remainingWidth);
+            startX = 0;
+        }
+
+        nextBlock.startY = (root.startY + root.renderHeight / 2) - nextBlock.renderHeight / 2;
+        nextBlock.startX = startX;
+        nextBlock.fit = true;
+        this.debugCallback(nextBlock);
+
+    },
+
+    gofit: function (blocks) {
+
+        this.blocks = blocks;
+
+        this.fitCorners(blocks);
+
+
 
         this.fitEdges(blocks);
         return;
@@ -78,9 +152,6 @@ Collage.prototype = {
         }
     },
 
-    
-
-
     goRight: function (startingBlock) {
 
         var block = this.getNextFreeBlock();
@@ -93,11 +164,12 @@ Collage.prototype = {
         }
 
         // Check to see if the left-half of the block will overlap with the starting point of another block
-        
+
+
 
         goRight(block);
     },
-    
+
 
     /*
     * Gets 2-edge squares (corners) in grid and makes
@@ -110,11 +182,7 @@ Collage.prototype = {
 
         for (var i = 0; i < corners.length; i++) {
 
-            var block = blocks[this.blockNumber];
-
-            if (block == undefined) {
-                return;
-            }
+            var block = this.getNextFreeBlock();            
 
             if (block.renderWidth > block.renderHeight) {
                 block.scaleToWidth(block.startingScale * this.columnWidth);
@@ -129,24 +197,100 @@ Collage.prototype = {
             block.startY = (edgeType[0] == "bottom") ? cell.getBottomEdge() - block.renderHeight : cell.getTopEdge();
             block.startX = (edgeType[1] == "right") ? cell.getRightEdge() - block.renderWidth : cell.getLeftEdge();
 
-            if (edgeType[0] == "bottom") {                
-                var heightOffset = Math.ceil((block.renderHeight / this.rowHeight));
+            if (edgeType[0] == "bottom") {
+                var heightOffset = Math.floor((block.renderHeight / this.rowHeight));
                 cell = this.arr[cell.row - heightOffset][cell.column];
             }
-                        
-            if (edgeType[1] == "right") {                
-                var columnOffset = Math.ceil((block.renderWidth / this.columnWidth) - 1);
+
+            if (edgeType[1] == "right") {
+                var columnOffset = Math.floor((block.renderWidth / this.columnWidth) - 1);
                 cell = this.arr[cell.row][cell.column - columnOffset];
             }
-                        
+
             this.blockAdjacentCells(block, cell);
 
             if (this.debugCallback != undefined) {
-                this.debugCallback(this.blockNumber);
-            }
+                this.debugCallback(block);
+            }            
 
             this.blockNumber++;
         }
+
+        this.addRightAdjacentBlocks(corners[0].block);
+        this.addBottomAdjacentBlocks(corners[0].block);        
+    },
+
+    addBottomAdjacentBlocks: function(rootBlock){
+
+        if (rootBlock.bottom != undefined) {
+            return;
+        }
+
+        var block = this.getNextFreeBlock();
+       
+        if (block.renderWidth > block.renderHeight) {
+            block.scaleToWidth(block.startingScale * this.columnWidth);
+        }
+        else {
+            block.scaleToHeight(block.startingScale * this.rowHeight);
+        }
+
+        var startX = 0;
+        var startY = rootBlock.startY + rootBlock.renderHeight - Overlap_Value;
+        var startingCell = this.getCellAt(startY, startX);
+
+
+        block.startX = startX;
+        block.startY = startY;
+        rootBlock.bottom = block;
+
+        var adjacentCell = this.getCellAt(startY + block.renderHeight + Overlap_Value, startX);
+
+        if (adjacentCell != undefined && !adjacentCell.isAvailable && adjacentCell.block != block) {
+            block.bottom = adjacentCell.block;
+            return;
+        }
+
+        this.blockAdjacentCells(block, startingCell);
+        this.debugCallback(block);
+
+        this.addBottomAdjacentBlocks(block);
+    },
+
+    addRightAdjacentBlocks: function(rootBlock){
+
+        if (rootBlock.right != undefined) {
+            return;
+        }
+          
+        var startX = rootBlock.startX + rootBlock.renderWidth - Overlap_Value;
+        var startY = rootBlock.startY;
+        var startingCell = this.arr[this.getRowIndex(startY)][this.getColumnIndex(startX)];
+        
+        var block = this.getNextFreeBlock();
+
+        if (block.renderWidth > block.renderHeight) {
+            block.scaleToWidth(block.startingScale * this.columnWidth);
+        }
+        else {
+            block.scaleToHeight(block.startingScale * this.rowHeight);
+        }
+
+        block.startX = startX;
+        block.startY = startY;
+        rootBlock.right = block;
+        
+        var adjacentCell = this.getCellAt(startY, startX + block.renderWidth + Overlap_Value);
+
+        if (adjacentCell != undefined && !adjacentCell.isAvailable && adjacentCell.block != block) {
+            block.right = adjacentCell.block;
+            return;
+        }
+
+        this.blockAdjacentCells(block, startingCell);
+        this.debugCallback(block);
+
+        this.addRightAdjacentBlocks(block);
     },
 
     /*
@@ -295,6 +439,7 @@ Collage.prototype = {
             while (remainingWidth >= (cell.width / 2) && col < this.arr[row].length) {
 
                 this.arr[row][col].isAvailable = false;
+                this.arr[row][col].block = block;
 
                 remainingWidth -= cell.width;
                 col++;
@@ -339,11 +484,11 @@ Collage.prototype = {
     *
     */
     getNextFreeBlock: function () {
-                
+
         for (var index = 0; index < this.blocks.length; index++) {
             if (!this.blocks[index].fit) {
                 return this.blocks[index];
-            }            
+            }
         }
 
         return null;
@@ -359,6 +504,13 @@ Collage.prototype = {
             }
         }
 
+    },
+
+    addPlaceholder: function (cellStartY, cellStartX, block) {
+
+        block.startX = this.arr[cellStartY][cellStartX].getLeftEdge();
+        block.startY = this.arr[cellStartY][cellStartX].getTopEdge();
+        block.fit = true;
     },
 
     /*
@@ -386,7 +538,7 @@ Collage.prototype = {
         return cornerCells;
     },
 
-   
+
     /*
     * Goes through the grid and collects all single edge (top edge, bottom edge, or top-bottom edge) edge cells
     * @param edgeToLookFor (top, left, bottom right) optional
@@ -445,17 +597,21 @@ Collage.prototype = {
         return edgeTypes;
     },
 
+    getCellAt : function(yPosition, xPosition){
+        return this.arr[this.getRowIndex(yPosition)][this.getColumnIndex(xPosition)];
+    },
+
     /*
     * Given an xCoordinate get the column that corresponds.    
     */
     getColumnIndex: function (xPosition) {
-        return xPosition / this.columnWidth;
+        return Math.floor(xPosition / this.columnWidth);
     },
 
     /*
     * Given a yCoordinate gets the row that corresponds.
     */
     getRowIndex: function (yPosition) {
-        return yPosition / this.rowHeight;
+        return Math.floor(yPosition / this.rowHeight);
     },
 }
