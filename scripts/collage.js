@@ -1,4 +1,4 @@
-const Overlap_Value = 30;
+const Overlap_Value = 25;
 
 /// <reference path="block.js" />
 Collage = function (height, width, rowHeight, columnWidth, debugCallback) {
@@ -14,16 +14,19 @@ Collage = function (height, width, rowHeight, columnWidth, debugCallback) {
     this.width = width;
     this.rowHeight = rowHeight;
     this.columnWidth = columnWidth;
-    this.blockNumber = 0;
     this.debugCallback = debugCallback;
+
+    this.blockNumber = 0;
     this.blocks = null;
-    
 
     this.initializeGrid(height, width);
 }
 
 Collage.prototype = {
 
+    /*
+    * Creates the internal grid used to track cells for determining where a block has been placed.
+    */
     initializeGrid: function (height, width) {
 
         var numRows = height / this.rowHeight;
@@ -37,139 +40,115 @@ Collage.prototype = {
                 this.arr[row][col] = new Cell(row, col, this.rowHeight, this.columnWidth);
             }
         }
-
     },
 
+
+    addBlockCorners: function (centerBlock) {
+
+        //Add Top-Right
+        //As long as there isn't a top right and adding a topright doesn't take us past the 
+        //edge of the grid
+        if (centerBlock.topright == undefined) {
+            var topRight = this.getNextFreeBlock();
+            topRight.scale(6 * 72);           
+
+            var coords = centerBlock.getCoordsForTopRight(topRight);
+
+            if (coords.x + topRight.renderWidth < this.width &&
+                coords.y > 0) {
+
+                topRight.setTopLeft(coords);
+                topRight.fit = true;
+                centerBlock.linkTopRight(topRight);
+
+                this.debugCallback(topRight);
+
+                this.addBlockCorners(topRight);
+            }                         
+        }
+
+        //Add Bottom-Right
+        if (centerBlock.bottomright == undefined) {
+            var bottomRight = this.getNextFreeBlock();
+            bottomRight.scale(6 * 72);                            
+
+            var coords = centerBlock.getCoordsForBottomRight(bottomRight);
+
+            if (coords.x + bottomRight.renderWidth < this.width && coords.y + bottomRight.renderHeight < this.height) {
+
+                bottomRight.setTopLeft(coords);
+                bottomRight.fit = true;
+                centerBlock.linkBottomRight(bottomRight);
+
+                // TODO: Get Add If Debug
+                this.debugCallback(bottomRight);
+
+                //this.addBlockCorners(bottomRight);
+            }
+        }
+
+        //Add Bottom-Left
+        if (centerBlock.bottomleft == undefined) {
+            var bottomLeft = this.getNextFreeBlock();
+            bottomLeft.scale(6 * 72);            
+
+            var coords = centerBlock.getCoordsForBottomLeft(bottomLeft);
+
+            if (coords.x > 0 && coords.y + bottomLeft.renderHeight < this.height) {
+
+                bottomLeft.setTopLeft(coords);
+                bottomLeft.fit = true;
+                centerBlock.linkBottomRight(bottomLeft);
+
+                // TODO: Get Add If Debug
+                this.debugCallback(bottomLeft);
+
+                //this.addBlockCorners(bottomLeft);
+            }
+        }
+
+        //Add Top-Left
+        if (centerBlock.topleft == undefined) {
+            var topLeft = this.getNextFreeBlock();
+            topLeft.scale(6 * 72);
+
+            var coords = centerBlock.getCoordsForTopLeft(topLeft);
+
+            if (coords.x > 0 && coords.y > 0) {
+
+                topLeft.setTopLeft(coords);
+                topLeft.fit = true;
+                centerBlock.linkTopLeft(topLeft);
+
+                // TODO: Get Add If Debug
+                this.debugCallback(topLeft);
+
+                //this.addBlockCorners(topLeft);
+            }            
+        }
+    },
 
     fit: function (blocks) {
 
         this.blocks = blocks;
-        this.fitCorners(blocks);
 
-        return;
-    },
-
-    circle: function (root) {
-
-        var nextBlock = this.blocks.find(function (block) {
-            return !block.fit;
-        })
-
-        //top
-        var startY = root.startY - nextBlock.renderHeight + 40;
-        var startX = 0;
-
-        if (startY < 0) {
-            var remainingHeight = root.startY + 40;
-            nextBlock.scaleToHeight(remainingHeight);
-            startY = 0;
-        }
-
-        nextBlock.startY = startY;
-        nextBlock.startX = (root.startX + root.renderWidth / 2) - nextBlock.renderWidth/2;
-        nextBlock.fit = true;
-        this.debugCallback(nextBlock);
-
-        //right
-        nextBlock = this.blocks.find(function (block) {
-            return !block.fit;
-        });
-
-        var startX = root.startX + root.renderWidth - 40;
-
-        nextBlock.startX = startX;
-        nextBlock.startY = (root.startY + root.renderHeight / 2) - nextBlock.renderHeight / 2;
-        nextBlock.fit = true;
-        this.debugCallback(nextBlock);
-
-        //bottom
-        nextBlock = this.blocks.find(function (block) {
-            return !block.fit;
-        });        
-
-        nextBlock.startX = (root.startX + root.renderWidth / 2) - nextBlock.renderWidth / 2;
-        nextBlock.startY = root.startY + root.renderHeight - 40;
-        nextBlock.fit = true;
-        this.debugCallback(nextBlock);
-
-        //left
-        nextBlock = this.blocks.find(function (block) {
-            return !block.fit;
-        });
+        // Grab a block
+        // Set it to the center of the map
         
-        startX = root.startX - nextBlock.renderWidth + 40;
-        if (startX < 0) {
-            var remainingWidth = root.startX + 40;
-            nextBlock.scaleToWidth(remainingWidth);
-            startX = 0;
-        }
+        var firstBlock = this.getNextFreeBlock();
+        firstBlock.scale(6 * 72);
+        firstBlock.setCenter({ x: this.width / 2, y: this.height / 2 });
+        firstBlock.fit = true;
+        this.debugCallback(firstBlock);
 
-        nextBlock.startY = (root.startY + root.renderHeight / 2) - nextBlock.renderHeight / 2;
-        nextBlock.startX = startX;
-        nextBlock.fit = true;
-        this.debugCallback(nextBlock);
+        // Add Corners
+        this.addBlockCorners(firstBlock);
+               
 
-    },
-
-    gofit: function (blocks) {
-
-        this.blocks = blocks;
-
-        this.fitCorners(blocks);
-
-
-
-        this.fitEdges(blocks);
         return;
-
-        var numRows = this.arr.length;
-        var numColumns = this.arr[0].length;
-
-        for (var row = 0; row < numRows; row++) {
-            for (var col = 0; col < numColumns; col++) {
-
-                if (blocks[this.blockNumber] == undefined) {
-                    return;
-                }
-
-                if (!this.arr[row][col].isAvailable) {
-                    continue;
-                }
-                else {
-                    if (this.makeBlockFit(blocks[this.blockNumber], this.arr[row][col])) {
-                        blocks[this.blockNumber].startX = this.arr[row][col].getLeftEdge();
-                        blocks[this.blockNumber].startY = this.arr[row][col].getTopEdge();
-                        this.blockAdjacentCells(blocks[this.blockNumber], this.arr[row][col]);
-
-                        if (this.debugCallback != undefined) {
-                            this.debugCallback(this.blockNumber);
-                        }
-
-                        this.blockNumber++;
-                    }
-                }
-            }
-        }
     },
 
-    goRight: function (startingBlock) {
-
-        var block = this.getNextFreeBlock();
-
-        if (block.renderWidth > block.renderHeight) {
-            block.scaleToWidth(block.startingScale * this.columnWidth);
-        }
-        else {
-            block.scaleToHeight(block.startingScale * this.rowHeight);
-        }
-
-        // Check to see if the left-half of the block will overlap with the starting point of another block
-
-
-
-        goRight(block);
-    },
-
+    
 
     /*
     * Gets 2-edge squares (corners) in grid and makes
@@ -182,7 +161,7 @@ Collage.prototype = {
 
         for (var i = 0; i < corners.length; i++) {
 
-            var block = this.getNextFreeBlock();            
+            var block = this.getNextFreeBlock();
 
             if (block.renderWidth > block.renderHeight) {
                 block.scaleToWidth(block.startingScale * this.columnWidth);
@@ -211,23 +190,29 @@ Collage.prototype = {
 
             if (this.debugCallback != undefined) {
                 this.debugCallback(block);
-            }            
+            }
+
+            if (i == 2) {
+                corners[i].block = block;
+            }
 
             this.blockNumber++;
         }
 
-        this.addRightAdjacentBlocks(corners[0].block);
-        this.addBottomAdjacentBlocks(corners[0].block);        
+        this.addTopEdges(corners[0].block);
+        this.addLeftEdges(corners[0].block);
+        this.addRightEdges(corners[1].block);
+        this.addBottomEdges(corners[2].block);
     },
 
-    addBottomAdjacentBlocks: function(rootBlock){
+    addLeftEdges: function (rootBlock) {
 
         if (rootBlock.bottom != undefined) {
             return;
         }
 
         var block = this.getNextFreeBlock();
-       
+
         if (block.renderWidth > block.renderHeight) {
             block.scaleToWidth(block.startingScale * this.columnWidth);
         }
@@ -244,29 +229,94 @@ Collage.prototype = {
         block.startY = startY;
         rootBlock.bottom = block;
 
-        var adjacentCell = this.getCellAt(startY + block.renderHeight + Overlap_Value, startX);
-
-        if (adjacentCell != undefined && !adjacentCell.isAvailable && adjacentCell.block != block) {
-            block.bottom = adjacentCell.block;
+        if (!this.checkFreeDuringCriticalCoords(block)) {
             return;
         }
 
         this.blockAdjacentCells(block, startingCell);
         this.debugCallback(block);
 
-        this.addBottomAdjacentBlocks(block);
+        this.addLeftEdges(block);
     },
 
-    addRightAdjacentBlocks: function(rootBlock){
+    addBottomEdges: function (rootBlock) {
+
+        if (rootBlock.bottom != undefined) {
+            return;
+        }
+
+        var block = this.getNextFreeBlock();
+
+        if (block.renderWidth > block.renderHeight) {
+            block.scaleToWidth(block.startingScale * this.columnWidth);
+        }
+        else {
+            block.scaleToHeight(block.startingScale * this.rowHeight);
+        }
+
+        var startX = rootBlock.startX + rootBlock.renderWidth - Overlap_Value;
+        var startY = rootBlock.startY + rootBlock.renderHeight - block.renderHeight;
+        var startingCell = this.getCellAt(startY, startX);
+
+
+        block.startX = startX;
+        block.startY = startY;
+        rootBlock.right = block;
+
+        if (!this.checkFreeDuringCriticalCoords(block)) {
+            return;
+        }
+
+        this.blockAdjacentCells(block, startingCell);
+        this.debugCallback(block);
+
+        this.addBottomEdges(block);
+    },
+
+    addRightEdges: function (rootBlock) {
+
+        if (rootBlock.bottom != undefined) {
+            return;
+        }
+
+        var block = this.getNextFreeBlock();
+
+        if (block.renderWidth > block.renderHeight) {
+            block.scaleToWidth(block.startingScale * this.columnWidth);
+        }
+        else {
+            block.scaleToHeight(block.startingScale * this.rowHeight);
+        }
+
+        var startX = (rootBlock.startX + rootBlock.renderWidth) - block.renderWidth;
+        var startY = rootBlock.startY + rootBlock.renderHeight - Overlap_Value;
+        var startingCell = this.getCellAt(startY, startX);
+
+
+        block.startX = startX;
+        block.startY = startY;
+        rootBlock.bottom = block;
+
+        if (!this.checkFreeDuringCriticalCoords(block)) {
+            return;
+        }
+
+        this.blockAdjacentCells(block, startingCell);
+        this.debugCallback(block);
+
+        this.addRightEdges(block);
+    },
+
+    addTopEdges: function (rootBlock) {
 
         if (rootBlock.right != undefined) {
             return;
         }
-          
+
         var startX = rootBlock.startX + rootBlock.renderWidth - Overlap_Value;
         var startY = rootBlock.startY;
-        var startingCell = this.arr[this.getRowIndex(startY)][this.getColumnIndex(startX)];
-        
+        var startingCell = this.getCellAt(startY, startX);
+
         var block = this.getNextFreeBlock();
 
         if (block.renderWidth > block.renderHeight) {
@@ -279,18 +329,31 @@ Collage.prototype = {
         block.startX = startX;
         block.startY = startY;
         rootBlock.right = block;
-        
-        var adjacentCell = this.getCellAt(startY, startX + block.renderWidth + Overlap_Value);
 
-        if (adjacentCell != undefined && !adjacentCell.isAvailable && adjacentCell.block != block) {
-            block.right = adjacentCell.block;
+        if (!this.checkFreeDuringCriticalCoords(block)) {
             return;
         }
 
         this.blockAdjacentCells(block, startingCell);
         this.debugCallback(block);
 
-        this.addRightAdjacentBlocks(block);
+        this.addTopEdges(block);
+    },
+
+    checkFreeDuringCriticalCoords: function (block) {
+        var criticalCoordinates = block.getCriticalCoordinates();
+
+        for (var y = block.startY + criticalCoordinates.y1 + Overlap_Value; y < block.startY + criticalCoordinates.y2; y += this.rowHeight) {
+            for (var x = block.startX + criticalCoordinates.x1 + Overlap_Value; x < block.startX + criticalCoordinates.x2; x += this.columnWidth) {
+                var cell = this.getCellAt(y, x);
+
+                if (cell == undefined || !cell.isAvailable) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     },
 
     /*
@@ -454,46 +517,37 @@ Collage.prototype = {
 
 
 
+    landscapeFilter: function (block) {
+        return block.renderWidth > block.renderHeight;
+    },
 
-
-    /*
-    * Returns true/false if the dimensions have any blocking cells given the starting row and column.
-    *
-    *
-    */
-    checkForFreeCells: function (startingRow, startingColumn, heightInRows, widthInColumns) {
-
-        var canFit = true;
-        var maxRowIndex = (startingRow + heightInRows) >= this.arr.length ? this.arr.length : (startingRow + heightInRows);
-        var maxColIndex = (startingColumn + widthInColumns) >= this.arr[0].length ? this.arr[0].length : (startingColumn + widthInColumns);
-
-        for (var row = startingRow; row < maxRowIndex && canFit; row++) {
-            for (var col = startingColumn; col < maxColIndex; col++) {
-                if (!this.arr[row][col].isAvailable) {
-                    canFit = false;
-                    break;
-                }
-            }
-        }
-
-        return canFit;
+    portraitFilter: function (block) {
+        return block.renderHeight > block.renderWidth;
     },
 
     /*
     * Looks through the array of blocks and retrieves the next free block.
-    *
+    * @param filter optional callback function to add additional filter to nextfreeblock
     */
-    getNextFreeBlock: function () {
+    getNextFreeBlock: function (filter) {
 
         for (var index = 0; index < this.blocks.length; index++) {
+
             if (!this.blocks[index].fit) {
-                return this.blocks[index];
+
+                if (filter == undefined) {
+                    return this.blocks[index];
+                }
+
+                if (filter != undefined && filter(this.blocks[index])) {
+                    return this.blocks[index];
+                }
+
             }
         }
 
         return null;
     },
-
 
     addVoid: function (cellStartY, cellStartX, cellEndY, cellEndX) {
 
@@ -504,13 +558,6 @@ Collage.prototype = {
             }
         }
 
-    },
-
-    addPlaceholder: function (cellStartY, cellStartX, block) {
-
-        block.startX = this.arr[cellStartY][cellStartX].getLeftEdge();
-        block.startY = this.arr[cellStartY][cellStartX].getTopEdge();
-        block.fit = true;
     },
 
     /*
@@ -540,7 +587,7 @@ Collage.prototype = {
 
 
     /*
-    * Goes through the grid and collects all single edge (top edge, bottom edge, or top-bottom edge) edge cells
+    * Gets all single edge (top edge, bottom edge, or top-bottom edge) edge cells
     * @param edgeToLookFor (top, left, bottom right) optional
     * @returns Array of single edge cells (top/bottom border counts as a single edge)
     */
@@ -597,8 +644,13 @@ Collage.prototype = {
         return edgeTypes;
     },
 
-    getCellAt : function(yPosition, xPosition){
-        return this.arr[this.getRowIndex(yPosition)][this.getColumnIndex(xPosition)];
+
+
+    /*
+    * @returns a Cell corresponding to the x,y coordinate on the grid.
+    */
+    getCellAt: function (coordinate) {
+        return this.arr[this.getRowIndex(coordinate.y)][this.getColumnIndex(coordinate.x)];
     },
 
     /*
@@ -614,4 +666,6 @@ Collage.prototype = {
     getRowIndex: function (yPosition) {
         return Math.floor(yPosition / this.rowHeight);
     },
+
+
 }

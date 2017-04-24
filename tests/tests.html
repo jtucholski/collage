@@ -15,6 +15,17 @@
     <script>
 
         QUnit.module("Block", function () {
+
+            QUnit.test("Critical Coordinates", function (assert) {
+
+                var block = new Block(100, 100);
+
+                assert.equal(block.getCriticalCoordinates(5).x1, 20);
+                assert.equal(block.getCriticalCoordinates(5).x2, 80);
+                assert.equal(block.getCriticalCoordinates(5).y1, 20);
+                assert.equal(block.getCriticalCoordinates(5).y2, 80);
+            });
+
             QUnit.test("Scale to Width Tests", function (assert) {
 
                 var block = new Block(200, 200);
