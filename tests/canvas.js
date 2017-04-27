@@ -27,17 +27,39 @@ function loadCanvas(images) {
     }
     
     //context.scale(0.5, 0.5);
+    //var callback = function (block) {
+    //    //console.log(`Image getting drawn from ${block.startY},${block.startX} to ${block.startY + block.renderHeight},${block.startX + block.renderWidth}`);
+    //    context.drawImage(block.mask, block.startX, block.startY, block.renderWidth, block.renderHeight);
+    //};
 
-    var collage = new Collage(canvas.height, canvas.width, 72, 72, function (block) {
-        console.log(`Image getting drawn from ${block.startY},${block.startX} to ${block.startY + block.renderHeight},${block.startX + block.renderWidth}`);
-        context.drawImage(block.mask, block.startX, block.startY, block.renderWidth, block.renderHeight);
-        });
+    var collage = new Collage(canvas.height, canvas.width, 72, 72);
      
     collage.fit(blocks);
 
     drawBoard(canvas, context, 72, 72);
-    
-    grayScale(context, canvas);
+
+    var blockIndex = -1;
+
+    document.addEventListener("keypress", function (e) {
+        if (e.keyCode == 13) {
+            var block;
+            while (blockIndex < blocks.length) {
+                blockIndex++;
+                if (blocks[blockIndex].fit) {
+                    block = blocks[blockIndex];
+                    break;
+                }
+            }
+
+            if (blockIndex >= blocks.length) {
+                grayScale(context, canvas);
+            }
+
+            if (block != undefined) {
+                context.drawImage(block.mask, block.startX, block.startY, block.renderWidth, block.renderHeight);
+            }
+        }
+    });       
 }
 
 function drawBoard(canvas, context, rowHeight, columnWidth) {

@@ -24,6 +24,8 @@ Collage = function (height, width, rowHeight, columnWidth, debugCallback) {
 
 Collage.prototype = {
 
+
+
     /*
     * Creates the internal grid used to track cells for determining where a block has been placed.
     */
@@ -61,7 +63,7 @@ Collage.prototype = {
                 topRight.fit = true;
                 centerBlock.linkTopRight(topRight);
 
-                this.debugCallback(topRight);
+                this.callDebugCallback(topRight);
 
                 this.addBlockCorners(topRight);
             }                         
@@ -81,7 +83,7 @@ Collage.prototype = {
                 centerBlock.linkBottomRight(bottomRight);
 
                 // TODO: Get Add If Debug
-                this.debugCallback(bottomRight);
+                this.callDebugCallback(bottomRight);
 
                 //this.addBlockCorners(bottomRight);
             }
@@ -101,7 +103,7 @@ Collage.prototype = {
                 centerBlock.linkBottomRight(bottomLeft);
 
                 // TODO: Get Add If Debug
-                this.debugCallback(bottomLeft);
+                this.callDebugCallback(bottomLeft);
 
                 //this.addBlockCorners(bottomLeft);
             }
@@ -121,7 +123,7 @@ Collage.prototype = {
                 centerBlock.linkTopLeft(topLeft);
 
                 // TODO: Get Add If Debug
-                this.debugCallback(topLeft);
+                this.callDebugCallback(topLeft);
 
                 //this.addBlockCorners(topLeft);
             }            
@@ -139,7 +141,7 @@ Collage.prototype = {
         firstBlock.scale(6 * 72);
         firstBlock.setCenter({ x: this.width / 2, y: this.height / 2 });
         firstBlock.fit = true;
-        this.debugCallback(firstBlock);
+        this.callDebugCallback(firstBlock);
 
         // Add Corners
         this.addBlockCorners(firstBlock);
@@ -148,7 +150,13 @@ Collage.prototype = {
         return;
     },
 
-    
+
+    callDebugCallback: function (block) {
+        if (this.debugCallback != undefined) {
+            this.debugCallback(block);
+        }
+    },
+
 
     /*
     * Gets 2-edge squares (corners) in grid and makes
